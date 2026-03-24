@@ -471,13 +471,28 @@ function updateClock() {
   }
 }
 
-function getRound(place, date) {
+  function getRound(place, date) {
   const s = schedule[place];
   if (!s || !s.start) return "?";
   const start = new Date(s.start);
-  const diff = Math.floor((date - start) / 86400000);
-  if (diff < 0) return "예정";
-  return Math.min(Math.floor(diff / (s.interval||7)) + 1, 5);
+  const today = date.toDateString();
+  const startDay = start.toDateString();
+  if (date < start) return "예정";
+
+  // 해당 장소의 기존 출석 기록에서 날짜 목록 추출
+  const pastDates = [...new Set(
+    records
+      .filter(r => r.place === place)
+      .map(r => new Date(r.timestamp).toDateString())
+  )].sort();
+
+  // 1회차 시작일 포함해서 날짜 목록 구성
+  if (!pastDates.includes(startDay)) pastDates.unshift(startDay);
+  if (!pastDates.includes(today)) pastDates.push(today);
+  pastDates.sort();
+
+  const round = pastDates.indexOf(today) + 1;
+  return Math.min(round, 6);
 }
 
 // ══════════════════════════════════════
